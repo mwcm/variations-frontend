@@ -1,6 +1,8 @@
 <script>
+  import ChordDiagram from './components/ChordDiagram.svelte';
+
   let chordInput = '';
-  let apiResponse = '';
+  let chordVariations = [];
 
   async function handleSubmit() {
     const chords = chordInput.split(',').map(chord => chord.trim());
@@ -8,86 +10,49 @@
       const response = await fetch('/variations', {
         method: 'POST',
         headers: {
-          'Content-Type':  'application/json',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(chords),
-      })
-
+      });
       if (!response.ok) {
-        throw new Error(`HTTP ERROR status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
-      apiResponse = JSON.stringify(data, null, 2);
+      chordVariations = await response.json();
     } catch (error) {
-      console.error('error:', error)
-      apiResponse = `Error: ${error.message}`; 
+      console.error('Error:', error);
+      chordVariations = [];
     }
   }
 </script>
 
-
-
-<main>
-  <h1>Variations</h1>
-  <div class='container'>
+<main class="container mx-auto px-4 py-8">
+  <h1 class="text-5xl font-bold mb-6">Variations</h1>
+  <div class="input-container mb-6">
     <input
       type="text"
       bind:value={chordInput}
-      placeholder="Enter Chords separated by commas"
-      />
-    <button on:click={handleSubmit}>Get Variations</button>
+      placeholder="Enter chords separated by commas (e.g., A, D, G)"
+      class="w-full p-2 border border-gray-300 rounded"
+    />
+    <button on:click={handleSubmit} class="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+      Get Optimal Transitions
+    </button>
   </div>
-  {#if apiResponse}
-    <h2>API Response:</h2>
-    <pre>{apiResponse}</pre>
+  {#if chordVariations.length > 0}
+    <h2 class="text-2xl font-semibold mb-4">Variations:</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-4">
+      {#each chordVariations as chord (chord.name)}
+        <div>
+          <ChordDiagram {chord} />
+        </div>
+      {/each}
+    </div>
   {/if}
 </main>
 
-
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+  :global(body) {
     font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
   }
-
-  h1, h2 {
-    color: #333;
-  }
-
-  .container {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  input {
-    flex-grow: 1;
-    padding: 10px
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-
-  button {
-    background-color: #4CAF50;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  pre {
-    padding: 15px;
-    border-radius: 4px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-
 </style>
